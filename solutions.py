@@ -1,9 +1,14 @@
 #! /bin/python
 
+# TODO: Add type hints
+
+from __future__ import annotations
 from itertools import *
+from enum import Flag
+from functools import reduce
 
 #
-# Section I. -------------------------------------------------------------------
+# Section I. -----------------------------------------------------------------------------------------------------------
 #
 
 with open("depths_input", "r") as file:
@@ -29,7 +34,7 @@ print("Part Two: ", end="") # 1538
 print(len(list(filter(has_positive_delta, pair_with_next(summed_windows)))))
 
 #
-# Section II. ------------------------------------------------------------------
+# Section II. ----------------------------------------------------------------------------------------------------------
 #
 
 directions = []
@@ -84,7 +89,7 @@ print("Part Four: ", end="")  # 1592426537
 print(ship.location())
 
 #
-# Section III. -----------------------------------------------------------------
+# Section III. ---------------------------------------------------------------------------------------------------------
 #
 
 # TODO: This section needs performance improvements
@@ -143,7 +148,7 @@ print("Part Six: ", end="") # 3570354
 print(int(oxygen_generator_rating[0], 2) * int(co2_scrubber_rating[0], 2))
 
 #
-# Section IV. ------------------------------------------------------------------
+# Section IV. ----------------------------------------------------------------------------------------------------------
 #
 
 raw_line_input = []
@@ -222,7 +227,7 @@ print("Part Eight: ", end="") # 12080
 print(scores[len(scores) - 1])
 
 #
-# Section V. -------------------------------------------------------------------
+# Section V. -----------------------------------------------------------------------------------------------------------
 #
 
 # I gave up and copied this one from Reddit user /u/KronoLord at
@@ -285,7 +290,7 @@ for segment in diagonal_segments:
 print("Part Ten:", len([val for row in diagram for val in row if val >= 2]))
 
 #
-# Section VI. ------------------------------------------------------------------
+# Section VI. ----------------------------------------------------------------------------------------------------------
 #
 
 with open("lanternfish_input", "r") as file:
@@ -319,7 +324,7 @@ for i in range(0, 256 - 80):
 print("Part Twelve:", sum(counts)) # 1757714216975
 
 #
-# Section VII. -----------------------------------------------------------------
+# Section VII. ---------------------------------------------------------------------------------------------------------
 #
 
 # TODO: This section needs performance improvements
@@ -343,11 +348,8 @@ print("Part Thirteen:", fuel_cons[min(fuel_cons, key=fuel_cons.get)]) # 357353
 print("Part Fourteen:", fuel_cons_2[min(fuel_cons_2, key=fuel_cons_2.get)]) # 104822130
 
 #
-# Section VIII. ----------------------------------------------------------------
+# Section VIII. --------------------------------------------------------------------------------------------------------
 #
-
-# This one almost broke me and I gave up on solving AoC for several months, but in the
-#   end I ended up really happy with the solution I got.
 
 lines = []
 
@@ -457,3 +459,142 @@ def digitsCounter(number):
 
 print("Part Fifteen:", sum(map(digitsCounter, outputs))) # 519
 print("Part Sixteen:", sum(outputs)) # 1027483
+
+#
+# Section IX. ----------------------------------------------------------------
+#
+
+with open("smoke_input", 'r') as f:
+    lines = f.read().split('\n')[:-1]
+
+class HeightMap:
+    height: int = None
+    width: int = None
+    map: list[list[str]] = None
+    low_points: list[HeightMap.Point] = []
+    basins: list[HeightMap.Basin] = []
+
+    def __init__(self, map: list[list[str]]) -> None:
+        self.map = map
+        self.height = len(map)
+        self.width = len(map[0]) # All lines are the same length
+
+    class Point:
+        x: int = None
+        y: int = None
+        val: int = None
+
+        def __init__(self,x,y,val=None) -> None:
+            self.x = x
+            self.y = y
+            if val is not None:
+                self.val = val
+
+        def __str__(self) -> str:
+            return f"{self.val}-({self.x},{self.y})"
+
+        def __repr__(self) -> str:
+            return str(self)
+
+        def __hash__(self) -> int:
+            return hash((self.x,self.y))
+
+        def __eq__(self, __o: object) -> bool:
+            return self.x == __o.x and self.y == __o.y
+
+    def GetPoint(self, x: int,y: int) -> HeightMap.Point:
+        return HeightMap.Point(x,y,int(self.map[y][x]))
+
+    class MapLocation(Flag):
+        CENTRE = 0
+        TOP_EDGE = 1
+        BOT_EDGE = 2
+        R_EDGE = 4
+        L_EDGE = 8
+
+    def getLocation(self, point: Point) -> MapLocation:
+
+        location = self.MapLocation.CENTRE
+
+        if point.x == 0:
+            location |= self.MapLocation.L_EDGE
+        if point.x == (self.width - 1):
+            location |= self.MapLocation.R_EDGE
+        if point.y == 0:
+            location |= self.MapLocation.TOP_EDGE
+        if point.y == (self.height - 1):
+            location |= self.MapLocation.BOT_EDGE
+
+        return location
+
+    def getNeighbours(self, point: HeightMap.Point) -> list[HeightMap.Point]:
+
+        location: self.MapLocation = self.getLocation(point)
+        neighbours: list[HeightMap.Point] = []
+
+        if (location & self.MapLocation.TOP_EDGE) is not self.MapLocation.TOP_EDGE:
+            neighbours.append(self.GetPoint(point.x,point.y-1))
+        if (location & self.MapLocation.BOT_EDGE)is not self.MapLocation.BOT_EDGE:
+            neighbours.append(self.GetPoint(point.x,point.y+1))
+        if (location & self.MapLocation.R_EDGE)is not self.MapLocation.R_EDGE:
+            neighbours.append(self.GetPoint(point.x+1,point.y))
+        if (location & self.MapLocation.L_EDGE)is not self.MapLocation.L_EDGE:
+            neighbours.append(self.GetPoint(point.x-1,point.y))
+
+        return neighbours
+
+    def isLowPoint(self, point: HeightMap.Point) -> bool:
+
+        neighbours: list[HeightMap.Point] = self.getNeighbours(point)
+
+        for neighbour in neighbours:
+            if point.val >= neighbour.val:
+                return False
+
+        return True
+
+    def enumerateLowPoints(self) -> None:
+        for i in range(0,self.height):
+            for k in range(0, self.width):
+                point = self.GetPoint(k,i)
+                if self.isLowPoint(point):
+                    self.low_points.append(point)
+
+    class Basin:
+        points: set[HeightMap.Point] = set()
+        low_point: HeightMap.Point = None
+        size: int = lambda self: len(self.points)
+
+        def __init__(self, low_point) -> None:
+            self.points = set()
+            self.low_point = low_point
+            self.points.add(low_point)
+
+        def Find(self, point, height_map: HeightMap) -> None:
+            neighbours = height_map.getNeighbours(point)
+            for neighbour in neighbours:
+                if neighbour.val > point.val and neighbour.val != 9:
+                    self.points.add(neighbour)
+                    self.Find(neighbour, height_map)
+
+        def __lt__(self, __o: HeightMap.Basin) -> True:
+            return self.size() < __o.size()
+
+
+    def enumerateBasins(self) -> None:
+        for point in self.low_points:
+            basin = HeightMap.Basin(point)
+            basin.Find(point, self)
+            self.basins.append(basin)
+        self.basins.sort(reverse=True)
+
+height_map = HeightMap(lines)
+height_map.enumerateLowPoints()
+height_map.enumerateBasins()
+
+print("Part Seventeen:", sum(map(lambda p: p.val, height_map.low_points)) + len(height_map.low_points)) # 564
+print("Part Eighteen:", reduce(lambda z,x: z*x, map(lambda b: b.size(), height_map.basins[0:3]))) # 1038240
+
+#
+# Section X. -----------------------------------------------------------------------------------------------------------
+#
