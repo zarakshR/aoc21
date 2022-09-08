@@ -1,59 +1,71 @@
 #! /bin/python
 
 # TODO: Add type hints
+# TODO: Make input parsing consistent
+
+#
+# IMPORTS (Only stdlib allowed !!) -------------------------------------------------------------------------------------
+#
 
 from __future__ import annotations
-from itertools import *
-from enum import Flag
+from itertools import islice, count
+from enum import Flag, Enum
 from functools import reduce
+from typing import Tuple
+
+#
+# INPUTS ---------------------------------------------------------------------------------------------------------------
+#
+
+input_I = "inputs/1.in"
+input_II = "inputs/2.in"
+input_III = "inputs/3.in"
+input_IV = "inputs/4.in"
+input_V = "inputs/5.in"
+input_VI = "inputs/6.in"
+input_VII = "inputs/7.in"
+input_VIII = "inputs/8.in"
+input_IX = "inputs/9.in"
+input_X = "inputs/10.in"
+input_XI = "inputs/11.in"
 
 #
 # Section I. -----------------------------------------------------------------------------------------------------------
 #
 
-with open("depths_input", "r") as file:
+with open(input_I, "r") as file:
     depths = [
         int(depth.strip()) for depth in file.readlines() if depth.strip() != ""
     ]
 
-
 def has_positive_delta(couple):
     return couple[1] > couple[0]
-
 
 def pair_with_next(sequence):
     return zip(sequence, sequence[1:])
 
-
-print("Part One: ", end="") # 1502
-print(len(list(filter(has_positive_delta, pair_with_next(depths)))))
+print("Part One: ", len(list(filter(has_positive_delta, pair_with_next(depths))))) # 1502
 
 summed_windows = [sum(window) for window in zip(depths, depths[1:], depths[2:])]
 
-print("Part Two: ", end="") # 1538
-print(len(list(filter(has_positive_delta, pair_with_next(summed_windows)))))
+print("Part Two: ", len(list(filter(has_positive_delta, pair_with_next(summed_windows))))) # 1538
 
 #
 # Section II. ----------------------------------------------------------------------------------------------------------
 #
 
 directions = []
-with open("directions_input", "r") as file:
+with open(input_II, "r") as file:
     for positions in file:
         if positions.strip() != "":
             directions.append(tuple(positions.strip().split(" ")))
 
 
-class Ship:
-    pos = 0
-    depth = 0
-    bearing = 0
+pos = 0
+depth = 0
 
-    def location(self):
-        return self.pos * self.depth
+location = lambda : pos * depth
 
-
-ship = Ship()
 
 for direction in directions:
     (direction, value) = direction
@@ -61,16 +73,18 @@ for direction in directions:
 
     match direction:
         case "forward":
-            ship.pos += value
+            pos += value
         case "up":
-            ship.depth -= value
+            depth -= value
         case "down":
-            ship.depth += value
+            depth += value
 
 print("Part Three: ", end="")  # 1524750
-print(ship.location())
+print(location())
 
-ship = Ship()
+pos = 0
+depth = 0
+bearing = 0
 
 for direction in directions:
     (direction, value) = direction
@@ -78,24 +92,25 @@ for direction in directions:
 
     match direction:
         case "forward":
-            ship.pos += value
-            ship.depth += ship.bearing * value
+            pos += value
+            depth += bearing * value
         case "up":
-            ship.bearing -= value
+            bearing -= value
         case "down":
-            ship.bearing += value
+            bearing += value
 
 print("Part Four: ", end="")  # 1592426537
-print(ship.location())
+print(location())
 
 #
 # Section III. ---------------------------------------------------------------------------------------------------------
 #
 
+# TODO: This section needs a cleaner implementation
 # TODO: This section needs performance improvements
 
 numbers = []
-with open("diagnostics_input", "r") as file:
+with open(input_III, "r") as file:
     for number in file:
         if number.strip() != "":
             numbers.append(number.strip())
@@ -152,7 +167,7 @@ print(int(oxygen_generator_rating[0], 2) * int(co2_scrubber_rating[0], 2))
 #
 
 raw_line_input = []
-with open("bingo_input", "r") as file:
+with open(input_IV, "r") as file:
     draws = list(map(lambda str: int(str), file.readline().strip().split(",")))
     for positions in file:
         positions = positions.strip()
@@ -233,8 +248,10 @@ print(scores[len(scores) - 1])
 # I gave up and copied this one from Reddit user /u/KronoLord at
 # https://www.reddit.com/r/adventofcode/comments/r9824c/comment/hp0swd8/?utm_source=share&utm_medium=web2x&context=3
 
+# TODO: Do this myself
+
 read_data = None
-with open("vents_input") as f:
+with open(input_V, "r") as f:
     read_data = f.readlines()
 
 max_row, max_col = 0, 0
@@ -293,7 +310,7 @@ print("Part Ten:", len([val for row in diagram for val in row if val >= 2]))
 # Section VI. ----------------------------------------------------------------------------------------------------------
 #
 
-with open("lanternfish_input", "r") as file:
+with open(input_VI, "r") as file:
     input = list(map(lambda x: int(x), file.readline().strip().split(",")))
 
 counts = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -329,7 +346,7 @@ print("Part Twelve:", sum(counts)) # 1757714216975
 
 # TODO: This section needs performance improvements
 
-with open("crabs_input", "r") as file:
+with open(input_VII, "r") as file:
     positions = [int(x) for x in file.readline().strip().split(",")]
 
 fuel_cons = {
@@ -353,13 +370,29 @@ print("Part Fourteen:", fuel_cons_2[min(fuel_cons_2, key=fuel_cons_2.get)]) # 10
 
 lines = []
 
-with open('signals_input') as f:
+with open(input_VIII, "r") as f:
     for entry in f.read().split('\n')[:-1]:
         lines.append(tuple(entry.split(' | ')))
 
-class Decoder:
+# Maps digits to the segment signal wires that constitute it
+segment_map = {
+    0:frozenset(),
+    1:frozenset(),
+    2:frozenset(),
+    3:frozenset(),
+    4:frozenset(),
+    5:frozenset(),
+    6:frozenset(),
+    7:frozenset(),
+    8:frozenset(),
+    9:frozenset(),
+}
 
-    # Maps digits to the segment signal wires that constitute it
+# Returns an inverted version of segment map. To map signals to digits.
+SIGNAL_MAP = lambda: {segment_map[i]:i for i in segment_map}
+
+def ResetSegmentMap():
+    global segment_map
     segment_map = {
         0:frozenset(),
         1:frozenset(),
@@ -373,82 +406,70 @@ class Decoder:
         9:frozenset(),
     }
 
-    # Returns an inverted version of segment map. To map signals to digits.
-    signal_map = lambda self: {self.segment_map[i]:i for i in self.segment_map}
+# We need to use frozensets because we need to hash them in signal_map
 
-    def ResetSegmentMap(self):
-        self.segment_map = {
-            0:frozenset(),
-            1:frozenset(),
-            2:frozenset(),
-            3:frozenset(),
-            4:frozenset(),
-            5:frozenset(),
-            6:frozenset(),
-            7:frozenset(),
-            8:frozenset(),
-            9:frozenset(),
-        }
+# Decode the easy digits first. Digits 1,4,7, and 8 have a unique no. of segments
+def DecodeUniqueInputs(input):
+    for signal in input.split():
+        signal_len = len(signal) # No. of segments in the signal
+        wires = frozenset(signal) # Set of segments in the signal
+        match signal_len:
+            case 2: # If 2 segments are on, digit is 1
+                segment_map[1] = wires
+            case 3: # If 3 segments are on, digit is 7
+                segment_map[7] = wires
+            case 4: # If 4 segments are on, digit is 4
+                segment_map[4] = wires
+            case 7: # If 7 segments are on, digit is 8
+                segment_map[8] = wires
 
-    def DecodeUniqueInputs(self, input):
-        for signal in input.split():
-            signal_len = len(signal) # No. of segments in the signal
-            wires = frozenset(signal) # Set of segments in the signal
-            match signal_len:
-                case 2: # If 2 segments are on, digit is 1
-                    self.segment_map[1] = wires
-                case 3: # If 3 segments are on, digit is 7
-                    self.segment_map[7] = wires
-                case 4: # If 4 segments are on, digit is 4
-                    self.segment_map[4] = wires
-                case 7: # If 7 segments are on, digit is 8
-                    self.segment_map[8] = wires
+# We can check which segments a given signal shares with the known digits (1,4,7,8) to decode it.
+def DecodeNonUniqueInputs(input):
+    seg_map = segment_map
+    for signal in input.split():
+        signal_len = len(signal) # No. of segments in the signal
+        wires = frozenset(signal) # Set of segments in the signal
+        match signal_len:
+            case 5: # If 5 segments are on, digit is 3 OR 2 OR 5
+                if len(wires.intersection(seg_map[1])) == 2: # If it shares 2 segments with 1, digit is 3
+                    seg_map[3] = wires
+                else:
+                    match len(wires.intersection(seg_map[4])): # If it and 4 share...
+                        case 2: # ...2 segments, digit is 2
+                            seg_map[2] = wires
+                        case 3: # ...3 segments, digit is 5
+                            seg_map[5] = wires
+            case 6: # If 6 segments are on, digit is 6 OR 3 OR 4
+                if len(wires.intersection(seg_map[1])) == 1: # If it shares 1 segment with 1, digit is 6
+                    seg_map[6] = wires
+                else:
+                    match len(wires.intersection(seg_map[4])): # If it and 4 share...
+                        case 3: # ...3 segments, digit is 0
+                            seg_map[0] = wires
+                        case 4: # ...4 segments, digit is 9
+                            seg_map[9] = wires
 
-    def DecodeNonUniqueInputs(self, input):
-        seg_map = self.segment_map
-        for signal in input.split():
-            signal_len = len(signal) # No. of segments in the signal
-            wires = frozenset(signal) # Set of segments in the signal
-            match signal_len:
-                case 5: # If 5 segments are on, digit is 3 OR 2 OR 5
-                    if len(wires.intersection(seg_map[1])) == 2: # If it shares 2 segments with 1, digit is 3
-                        seg_map[3] = wires
-                    else:
-                        match len(wires.intersection(seg_map[4])): # If it and 4 share...
-                            case 2: # ...2 segments, digit is 2
-                                seg_map[2] = wires
-                            case 3: # ...3 segments, digit is 5
-                                seg_map[5] = wires
-                case 6: # If 6 segments are on, digit is 6 OR 3 OR 4
-                    if len(wires.intersection(seg_map[1])) == 1: # If it shares 1 segment with 1, digit is 6
-                        seg_map[6] = wires
-                    else:
-                        match len(wires.intersection(seg_map[4])): # If it and 4 share...
-                            case 3: # ...3 segments, digit is 0
-                                seg_map[0] = wires
-                            case 4: # ...4 segments, digit is 9
-                                seg_map[9] = wires
+# Uses the decoded segment-digit mappings to decode the output
+def DecodeOutput(output):
+    # Maps a signal to a digit
+    signal_map = SIGNAL_MAP()
+    output_string = ""
 
-    def DecodeOutput(self, output):
-        # Maps a signal to a digit
-        signal_map = self.signal_map()
-        output_string = ""
+    # We decode each signal and append it to the string
+    for signal in output.split():
+        output_string += str(signal_map[frozenset(signal)])
 
-        # We decode each signal and append it to the string
-        for signal in output.split():
-            output_string += str(signal_map[frozenset(signal)])
+    return int(output_string)
 
-        return int(output_string)
 
-    def Decode(self, line):
-        (input,output) = line[0],line[1]
-        self.ResetSegmentMap()
-        self.DecodeUniqueInputs(input)
-        self.DecodeNonUniqueInputs(input)
-        return self.DecodeOutput(output)
+outputs = []
 
-decoder = Decoder()
-outputs = [decoder.Decode(line) for line in lines]
+for line in lines:
+    (input,output) = line[0],line[1]
+    ResetSegmentMap() # Each line has a different segment-digit mapping.
+    DecodeUniqueInputs(input)
+    DecodeNonUniqueInputs(input)
+    outputs.append(DecodeOutput(output))
 
 def digitsCounter(number):
     number_str = str(number)
@@ -464,137 +485,178 @@ print("Part Sixteen:", sum(outputs)) # 1027483
 # Section IX. ----------------------------------------------------------------
 #
 
-with open("smoke_input", 'r') as f:
+with open(input_IX, "r") as f:
     lines = f.read().split('\n')[:-1]
 
-class HeightMap:
-    height: int = None
-    width: int = None
-    map: list[list[str]] = None
-    low_points: list[HeightMap.Point] = []
-    basins: list[HeightMap.Basin] = []
+height: int = len(lines)
+width: int = len(lines[0])
 
-    def __init__(self, map: list[list[str]]) -> None:
-        self.map = map
-        self.height = len(map)
-        self.width = len(map[0]) # All lines are the same length
+class Point:
+    x: int = None
+    y: int = None
+    val: int = None
 
-    class Point:
-        x: int = None
-        y: int = None
-        val: int = None
+    def __init__(self,x,y,val=None) -> None:
+        self.x = x
+        self.y = y
+        if val is None:
+            self.val = int(lines[x][y])
+        else:
+            self.val = val
 
-        def __init__(self,x,y,val=None) -> None:
-            self.x = x
-            self.y = y
-            if val is not None:
-                self.val = val
+    def getNeighbours(self) -> list[Point]:
 
-        def __str__(self) -> str:
-            return f"{self.val}-({self.x},{self.y})"
+        neighbours: list[Point] = []
 
-        def __repr__(self) -> str:
-            return str(self)
-
-        def __hash__(self) -> int:
-            return hash((self.x,self.y))
-
-        def __eq__(self, __o: object) -> bool:
-            return self.x == __o.x and self.y == __o.y
-
-    def GetPoint(self, x: int,y: int) -> HeightMap.Point:
-        return HeightMap.Point(x,y,int(self.map[y][x]))
-
-    class MapLocation(Flag):
-        CENTRE = 0
-        TOP_EDGE = 1
-        BOT_EDGE = 2
-        R_EDGE = 4
-        L_EDGE = 8
-
-    def getLocation(self, point: Point) -> MapLocation:
-
-        location = self.MapLocation.CENTRE
-
-        if point.x == 0:
-            location |= self.MapLocation.L_EDGE
-        if point.x == (self.width - 1):
-            location |= self.MapLocation.R_EDGE
-        if point.y == 0:
-            location |= self.MapLocation.TOP_EDGE
-        if point.y == (self.height - 1):
-            location |= self.MapLocation.BOT_EDGE
-
-        return location
-
-    def getNeighbours(self, point: HeightMap.Point) -> list[HeightMap.Point]:
-
-        location: self.MapLocation = self.getLocation(point)
-        neighbours: list[HeightMap.Point] = []
-
-        if (location & self.MapLocation.TOP_EDGE) is not self.MapLocation.TOP_EDGE:
-            neighbours.append(self.GetPoint(point.x,point.y-1))
-        if (location & self.MapLocation.BOT_EDGE)is not self.MapLocation.BOT_EDGE:
-            neighbours.append(self.GetPoint(point.x,point.y+1))
-        if (location & self.MapLocation.R_EDGE)is not self.MapLocation.R_EDGE:
-            neighbours.append(self.GetPoint(point.x+1,point.y))
-        if (location & self.MapLocation.L_EDGE)is not self.MapLocation.L_EDGE:
-            neighbours.append(self.GetPoint(point.x-1,point.y))
+        if not self.y == 0:
+            neighbours.append(Point(self.x,self.y-1))
+        if not self.y == height - 1:
+            neighbours.append(Point(self.x,self.y+1))
+        if not self.x == 0:
+            neighbours.append(Point(self.x-1,self.y))
+        if not self.x == width - 1:
+            neighbours.append(Point(self.x+1,self.y))
 
         return neighbours
 
-    def isLowPoint(self, point: HeightMap.Point) -> bool:
+    def isLowPoint(self) -> bool:
 
-        neighbours: list[HeightMap.Point] = self.getNeighbours(point)
+        neighbours: list[Point] = self.getNeighbours()
 
         for neighbour in neighbours:
-            if point.val >= neighbour.val:
+            if self.val >= neighbour.val:
                 return False
 
         return True
 
-    def enumerateLowPoints(self) -> None:
-        for i in range(0,self.height):
-            for k in range(0, self.width):
-                point = self.GetPoint(k,i)
-                if self.isLowPoint(point):
-                    self.low_points.append(point)
+    def __hash__(self) -> int:
+        return hash((self.x,self.y))
 
-    class Basin:
-        points: set[HeightMap.Point] = set()
-        low_point: HeightMap.Point = None
-        size: int = lambda self: len(self.points)
+    def __eq__(self, __o: object) -> bool:
+        return self.x == __o.x and self.y == __o.y
 
-        def __init__(self, low_point) -> None:
-            self.points = set()
-            self.low_point = low_point
-            self.points.add(low_point)
+class Basin:
+    # Use set for all points in basin so we dont have to check if we've visited a point before while finding
+    points: set[Point] = set()
+    low_point: Point = None
+    size: int = lambda self: len(self.points)
 
-        def Find(self, point, height_map: HeightMap) -> None:
-            neighbours = height_map.getNeighbours(point)
-            for neighbour in neighbours:
-                if neighbour.val > point.val and neighbour.val != 9:
-                    self.points.add(neighbour)
-                    self.Find(neighbour, height_map)
+    def __init__(self, low_point) -> None:
+        self.points = set()
+        self.low_point = low_point
+        self.points.add(low_point)
 
-        def __lt__(self, __o: HeightMap.Basin) -> True:
-            return self.size() < __o.size()
+    # Recursively finds all the points in the basin
+    def Find(self, point) -> None:
+        neighbours = point.getNeighbours()
+        for neighbour in neighbours:
+            if neighbour.val > point.val and neighbour.val != 9:
+                self.points.add(neighbour)
+                self.Find(neighbour)
 
+    def __lt__(self, __o: Basin) -> True:
+        return self.size() < __o.size()
 
-    def enumerateBasins(self) -> None:
-        for point in self.low_points:
-            basin = HeightMap.Basin(point)
-            basin.Find(point, self)
-            self.basins.append(basin)
-        self.basins.sort(reverse=True)
+low_points: list[Point] = []
+for i in range(0,height):
+    for k in range(0, width):
+        point = Point(k,i)
+        if point.isLowPoint():
+            low_points.append(point)
 
-height_map = HeightMap(lines)
-height_map.enumerateLowPoints()
-height_map.enumerateBasins()
+basins: list[Basin] = []
+for point in low_points:
+    basin = Basin(point)
+    basin.Find(point)
+    basins.append(basin)
 
-print("Part Seventeen:", sum(map(lambda p: p.val, height_map.low_points)) + len(height_map.low_points)) # 564
-print("Part Eighteen:", reduce(lambda z,x: z*x, map(lambda b: b.size(), height_map.basins[0:3]))) # 1038240
+basins.sort(reverse=True)
+
+print("Part Seventeen:", sum(map(lambda p: p.val, low_points)) + len(low_points)) # 564
+print("Part Eighteen:", reduce(lambda acc,x: acc*x, map(lambda b: b.size(), basins[0:3]))) # 1038240
 
 #
 # Section X. -----------------------------------------------------------------------------------------------------------
+#
+
+with open(input_X, "r") as f:
+    lines = f.read().split('\n')[:-1]
+
+BRACKETS_MAP = {
+    '(':')',
+    '[':']',
+    '{':'}',
+    '<':'>',
+}
+
+OPENING_BRACKETS = ['(','[','{','<']
+
+SYNTAX_ERROR_SCORE = {
+    ')': 3,
+    ']': 57,
+    '}': 1197,
+    '>': 25137,
+}
+
+COMPLETION_SCORE = {
+    ')': 1,
+    ']': 2,
+    '}': 3,
+    '>': 4,
+}
+
+stack = []
+
+def Push(bracket) -> None:
+    stack.append(bracket)
+
+# Pops from stack and checks if bracket is its closing version. If not, returns False
+def PopCheckValid(bracket) -> bool:
+    if BRACKETS_MAP[stack.pop()] == bracket:
+        return True
+    else:
+        return False
+
+class LineState(Enum):
+    CORRUPT = 1
+    INCOMPLETE = 2
+
+# Pushes and pops brackets until end of line is reached or corrupt character found. Returns a LineState and
+# corresponding error score
+def ParseAndScore(line) -> Tuple[LineState,str]:
+    for bracket in line:
+        if bracket in OPENING_BRACKETS:
+            Push(bracket)
+        else:
+            if not PopCheckValid(bracket):
+                return (LineState.CORRUPT, SYNTAX_ERROR_SCORE[bracket])
+
+    # Reached end of line without any corrupt chars. This means line is only incomplete -- proceed to calculate
+    # autocompletion score for this line
+
+    # Stack now contains all the unclosed brackets in the order they were opened.
+    completion_score = 0
+    for char in map(lambda c: BRACKETS_MAP[c],stack[::-1]):
+        completion_score *= 5
+        completion_score += COMPLETION_SCORE[char]
+
+    return (LineState.INCOMPLETE,completion_score)
+
+syntax_score_total = 0
+completion_scores = []
+
+for line in lines:
+    stack = []
+    (state,score) = ParseAndScore(line)
+    match state:
+        case LineState.CORRUPT:
+            syntax_score_total += score
+        case LineState.INCOMPLETE:
+            completion_scores.append(score)
+
+print("Part Nineteen:", syntax_score_total)
+print("Part Twenty: ", sorted(completion_scores)[len(completion_scores)//2])
+
+#
+# Section XI. ----------------------------------------------------------------------------------------------------------
 #
