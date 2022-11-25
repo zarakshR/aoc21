@@ -1,4 +1,4 @@
-#! /bin/python
+#! /bin/env python
 
 # TODO: Add type hints
 # TODO: Make input parsing consistent
