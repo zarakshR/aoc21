@@ -637,7 +637,7 @@ BRACKETS_MAP = {
     '<':'>',
 }
 
-OPENING_BRACKETS = ['(','[','{','<']
+OPENING_BRACKETS = list(BRACKETS_MAP.keys())
 
 SYNTAX_ERROR_SCORE = {
     ')': 3,
@@ -645,6 +645,7 @@ SYNTAX_ERROR_SCORE = {
     '}': 1197,
     '>': 25137,
 }
+assert(len(SYNTAX_ERROR_SCORES) == len(OPENING_BRACKETS))
 
 COMPLETION_SCORE = {
     ')': 1,
@@ -652,6 +653,7 @@ COMPLETION_SCORE = {
     '}': 3,
     '>': 4,
 }
+assert(len(COMPLETION_SCORES) == len(OPENING_BRACKETS))
 
 stack = []
 
