@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 from itertools import islice, count
-from enum import Flag, Enum
+from enum import Enum
 from functools import reduce
 from time import perf_counter
 from typing import Tuple
@@ -639,7 +639,7 @@ BRACKETS_MAP = {
 
 OPENING_BRACKETS = list(BRACKETS_MAP.keys())
 
-SYNTAX_ERROR_SCORE = {
+SYNTAX_ERROR_SCORES = {
     ')': 3,
     ']': 57,
     '}': 1197,
@@ -647,7 +647,7 @@ SYNTAX_ERROR_SCORE = {
 }
 assert(len(SYNTAX_ERROR_SCORES) == len(OPENING_BRACKETS))
 
-COMPLETION_SCORE = {
+COMPLETION_SCORES = {
     ')': 1,
     ']': 2,
     '}': 3,
@@ -661,7 +661,7 @@ def Push(bracket) -> None:
     stack.append(bracket)
 
 # Pops from stack and checks if bracket is its closing version. If not, returns False
-def PopCheckValid(bracket) -> bool:
+def Pop(bracket) -> bool:
     if BRACKETS_MAP[stack.pop()] == bracket:
         return True
     else:
@@ -678,8 +678,8 @@ def ParseAndScore(line) -> Tuple[LineState,str]:
         if bracket in OPENING_BRACKETS:
             Push(bracket)
         else:
-            if not PopCheckValid(bracket):
-                return (LineState.CORRUPT, SYNTAX_ERROR_SCORE[bracket])
+            if not Pop(bracket):
+                return (LineState.CORRUPT, SYNTAX_ERROR_SCORES[bracket])
 
     # Reached end of line without any corrupt chars. This means line is only incomplete -- proceed to calculate
     # autocompletion score for this line
@@ -688,7 +688,7 @@ def ParseAndScore(line) -> Tuple[LineState,str]:
     completion_score = 0
     for char in map(lambda c: BRACKETS_MAP[c],stack[::-1]):
         completion_score *= 5
-        completion_score += COMPLETION_SCORE[char]
+        completion_score += COMPLETION_SCORES[char]
 
     return (LineState.INCOMPLETE,completion_score)
 
@@ -704,8 +704,8 @@ for line in lines:
         case LineState.INCOMPLETE:
             completion_scores.append(score)
 
-print("Part Nineteen:", syntax_score_total)
-print("Part Twenty: ", sorted(completion_scores)[len(completion_scores)//2])
+print("Part Nineteen:", syntax_score_total) # 369105
+print("Part Twenty: ", sorted(completion_scores)[len(completion_scores)//2]) # 3999363569
 
 print("Time: ", perf_counter() - TIME_TEN)
 print("")
