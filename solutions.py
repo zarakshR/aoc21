@@ -11,6 +11,7 @@ from __future__ import annotations
 from itertools import islice, count
 from enum import Flag, Enum
 from functools import reduce
+from time import perf_counter
 from typing import Tuple
 
 #
@@ -33,6 +34,8 @@ input_XI = "inputs/11.in"
 # Section I. -----------------------------------------------------------------------------------------------------------
 #
 
+TIME_ONE = perf_counter()
+
 with open(input_I, "r") as file:
     depths = [
         int(depth.strip()) for depth in file.readlines() if depth.strip() != ""
@@ -50,9 +53,14 @@ summed_windows = [sum(window) for window in zip(depths, depths[1:], depths[2:])]
 
 print("Part Two: ", len(list(filter(has_positive_delta, pair_with_next(summed_windows))))) # 1538
 
+print("Time: ", perf_counter() - TIME_ONE)
+print("")
+
 #
 # Section II. ----------------------------------------------------------------------------------------------------------
 #
+
+TIME_TWO = perf_counter()
 
 directions = []
 with open(input_II, "r") as file:
@@ -102,12 +110,17 @@ for direction in directions:
 print("Part Four: ", end="")  # 1592426537
 print(location())
 
+print("Time: ", perf_counter() - TIME_TWO)
+print("")
+
 #
 # Section III. ---------------------------------------------------------------------------------------------------------
 #
 
 # TODO: This section needs a cleaner implementation
 # TODO: This section needs performance improvements
+
+TIME_THREE = perf_counter()
 
 numbers = []
 with open(input_III, "r") as file:
@@ -162,9 +175,14 @@ co2_scrubber_rating = filter_nums_by_modality(numbers, 0, antimodal=True)
 print("Part Six: ", end="") # 3570354
 print(int(oxygen_generator_rating[0], 2) * int(co2_scrubber_rating[0], 2))
 
+print("Time: ", perf_counter() - TIME_THREE)
+print("")
+
 #
 # Section IV. ----------------------------------------------------------------------------------------------------------
 #
+
+TIME_FOUR = perf_counter()
 
 raw_line_input = []
 with open(input_IV, "r") as file:
@@ -241,6 +259,9 @@ print(scores[0])
 print("Part Eight: ", end="") # 12080
 print(scores[len(scores) - 1])
 
+print("Time: ", perf_counter() - TIME_FOUR)
+print("")
+
 #
 # Section V. -----------------------------------------------------------------------------------------------------------
 #
@@ -249,6 +270,8 @@ print(scores[len(scores) - 1])
 # https://www.reddit.com/r/adventofcode/comments/r9824c/comment/hp0swd8/?utm_source=share&utm_medium=web2x&context=3
 
 # TODO: Do this myself
+
+TIME_FIVE = perf_counter()
 
 read_data = None
 with open(input_V, "r") as f:
@@ -306,9 +329,14 @@ for segment in diagonal_segments:
 # 17787
 print("Part Ten:", len([val for row in diagram for val in row if val >= 2]))
 
+print("Time: ", perf_counter() - TIME_FIVE)
+print("")
+
 #
 # Section VI. ----------------------------------------------------------------------------------------------------------
 #
+
+TIME_SIX = perf_counter()
 
 with open(input_VI, "r") as file:
     input = list(map(lambda x: int(x), file.readline().strip().split(",")))
@@ -340,11 +368,16 @@ for i in range(0, 256 - 80):
     counts = rotate(counts)
 print("Part Twelve:", sum(counts)) # 1757714216975
 
+print("Time: ", perf_counter() - TIME_SIX)
+print("")
+
 #
 # Section VII. ---------------------------------------------------------------------------------------------------------
 #
 
 # TODO: This section needs performance improvements
+
+TIME_SEVEN = perf_counter()
 
 with open(input_VII, "r") as file:
     positions = [int(x) for x in file.readline().strip().split(",")]
@@ -364,9 +397,14 @@ fuel_cons_2 = {
 print("Part Thirteen:", fuel_cons[min(fuel_cons, key=fuel_cons.get)]) # 357353
 print("Part Fourteen:", fuel_cons_2[min(fuel_cons_2, key=fuel_cons_2.get)]) # 104822130
 
+print("Time: ", perf_counter() - TIME_SEVEN)
+print("")
+
 #
 # Section VIII. --------------------------------------------------------------------------------------------------------
 #
+
+TIME_EIGHT = perf_counter()
 
 lines = []
 
@@ -481,9 +519,14 @@ def digitsCounter(number):
 print("Part Fifteen:", sum(map(digitsCounter, outputs))) # 519
 print("Part Sixteen:", sum(outputs)) # 1027483
 
+print("Time: ", perf_counter() - TIME_EIGHT)
+print("")
+
 #
 # Section IX. ----------------------------------------------------------------
 #
+
+TIME_NINE = perf_counter()
 
 with open(input_IX, "r") as f:
     lines = f.read().split('\n')[:-1]
@@ -575,9 +618,14 @@ basins.sort(reverse=True)
 print("Part Seventeen:", sum(map(lambda p: p.val, low_points)) + len(low_points)) # 564
 print("Part Eighteen:", reduce(lambda acc,x: acc*x, map(lambda b: b.size(), basins[0:3]))) # 1038240
 
+print("Time: ", perf_counter() - TIME_NINE)
+print("")
+
 #
 # Section X. -----------------------------------------------------------------------------------------------------------
 #
+
+TIME_TEN = perf_counter()
 
 with open(input_X, "r") as f:
     lines = f.read().split('\n')[:-1]
@@ -657,6 +705,14 @@ for line in lines:
 print("Part Nineteen:", syntax_score_total)
 print("Part Twenty: ", sorted(completion_scores)[len(completion_scores)//2])
 
+print("Time: ", perf_counter() - TIME_TEN)
+print("")
+
 #
 # Section XI. ----------------------------------------------------------------------------------------------------------
 #
+
+#TIME_ = perf_counter()
+
+#print("Time: ", perf_counter() - TIME_)
+#print("")
