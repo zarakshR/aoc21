@@ -8,11 +8,11 @@
 #
 
 from __future__ import annotations
+from typing import Tuple
 from itertools import islice, count
 from enum import Enum
 from functools import reduce
 from time import perf_counter
-from typing import Tuple
 
 #
 # INPUTS ---------------------------------------------------------------------------------------------------------------
@@ -715,6 +715,10 @@ print("")
 #
 
 #TIME_ = perf_counter()
+
+matrix = [ list(map(lambda x: int(x), list(line.strip('\n')))) for line in open(input_XI, "r").readlines() ]
+
+print(matrix)
 
 #print("Time: ", perf_counter() - TIME_)
 #print("")
